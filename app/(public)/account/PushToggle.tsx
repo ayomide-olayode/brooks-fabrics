@@ -47,6 +47,7 @@ export default function PushToggle() {
   const subscribeUser = async () => {
     setIsLoading(true);
     try {
+      console.log("VAPID KEY:", VAPID_PUBLIC_KEY);
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
         throw new Error("Permission not granted for Notification");
