@@ -98,10 +98,12 @@ export async function POST(request: Request) {
         );
       }
 
-      // Fire and forget order confirmation email
-      sendOrderConfirmationEmail(reference, orderData).catch((err) => {
+      // Await confirmation email
+      try {
+        await sendOrderConfirmationEmail(reference, orderData);
+      } catch (err) {
         logger.error("Failed to send order confirmation email", { error: err });
-      });
+      }
     }
 
     return NextResponse.json({ received: true });

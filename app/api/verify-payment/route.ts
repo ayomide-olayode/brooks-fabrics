@@ -104,18 +104,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Trigger confirmation email asynchronously (fire-and-forget)
-    sendOrderConfirmationEmail(reference, orderData).catch(err => 
-      console.error("[EMAIL ERROR] Failed to send order receipt:", err)
-    );
+    // Await confirmation email so serverless function doesn't exit early
+    try {
+      await sendOrderConfirmationEmail(reference, orderData);
+    } catch (err) {
+      console.error("[EMAIL ERROR] Failed to send order receipt:", err);
+    }
 
-    // Trigger push notification if they are a logged-in customer
+    // Await push notification
     if (orderData.customerId) {
-      sendPushToCustomer(orderData.customerId, {
-        title: "Order Received! 🎉",
-        body: `We have successfully received your order #${reference.substring(0, 8).toUpperCase()}`,
-        url: "/account/orders",
-      }).catch(err => console.error("[PUSH ERROR] Failed to send order push:", err));
+      try {
+        await sendPushToCustomer(orderData.customerId, {
+          title: "Order Received! 🎉",
+          body: `We have successfully received your order #${reference.substring(0, 8).toUpperCase()}`,
+          url: "/account/orders",
+        });
+      } catch (err) {
+        console.error("[PUSH ERROR] Failed to send order push:", err);
+      }
     }
 
     return NextResponse.json({
