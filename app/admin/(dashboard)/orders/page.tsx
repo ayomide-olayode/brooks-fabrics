@@ -51,7 +51,7 @@ export default async function AdminOrdersPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
           <p className="text-sm text-gray-500 mt-0.5">{orders.length} orders</p>
@@ -71,7 +71,7 @@ export default async function AdminOrdersPage({
       ) : (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm whitespace-nowrap">
               <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-3 text-left">Customer</th>

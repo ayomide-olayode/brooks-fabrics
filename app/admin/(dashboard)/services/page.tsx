@@ -26,7 +26,7 @@ export default async function AdminServicesPage() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
+          <table className="w-full text-left text-sm text-gray-600 whitespace-nowrap">
             <thead className="bg-gray-50 text-gray-700 text-xs uppercase font-semibold border-b border-gray-200">
               <tr>
                 <th className="px-6 py-4">Image</th>
