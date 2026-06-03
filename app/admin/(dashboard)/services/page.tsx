@@ -1,6 +1,7 @@
 import connectDB from "@/lib/db/mongoose";
 import Service from "@/lib/db/models/Service";
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import DeleteServiceButton from "./DeleteServiceButton";
 
@@ -40,7 +41,7 @@ export default async function AdminServicesPage() {
                   <td className="px-6 py-4">
                     <div className="w-12 h-12 bg-gray-200 rounded-md overflow-hidden relative">
                       {service.image ? (
-                        <img src={service.image} alt={service.name} className="w-full h-full object-cover" />
+                        <Image src={service.image} alt={service.name} fill sizes="48px" className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No img</div>
                       )}

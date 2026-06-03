@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     }
 
     // Auto-generate unique slug
-    let baseSlug = slugify(name);
+    const baseSlug = slugify(name);
     let slug = baseSlug;
     let count = 0;
     while (await Service.exists({ slug })) {

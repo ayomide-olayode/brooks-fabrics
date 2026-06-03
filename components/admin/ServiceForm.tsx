@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import Image from "next/image";
 import toast from "react-hot-toast";
 
 interface ServiceFormData {
@@ -171,11 +172,12 @@ export default function ServiceForm({ initialData }: ServiceFormProps) {
             </div>
 
             {imagePreview && (
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
-                <img
+              <div className="relative aspect-video bg-neutral-100 rounded-lg overflow-hidden flex items-center justify-center">
+                <Image
                   src={imagePreview}
                   alt="Preview"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             )}

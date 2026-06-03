@@ -85,7 +85,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await connectDB();
 
     // Auto-generate unique slug
-    let baseSlug = slugify(name);
+    const baseSlug = slugify(name);
     let slug = baseSlug;
     let count = 0;
     while (await Product.exists({ slug })) {

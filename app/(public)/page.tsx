@@ -100,9 +100,12 @@ export default async function HomePage() {
               <div className="absolute -inset-4 border-2 border-gold-500/20 rounded-3xl rotate-3 group-hover:rotate-0 transition-transform duration-700" />
 
               <div className="relative aspect-square flex items-center justify-center p-8 lg:p-12 animate-float">
-                <img
+                <Image
                   src="/images/Hero.png"
                   alt="Brooks Fabrics — Premium African Ankara Prints"
+                  width={450}
+                  height={450}
+                  priority
                   className="w-full max-w-[450px] h-auto drop-shadow-[0_20px_60px_rgba(0,0,0,0.4)]"
                 />
               </div>

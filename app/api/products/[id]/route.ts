@@ -52,7 +52,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     if (body.name) {
       const existing = await Product.findById(params.id).lean();
       if (existing && existing.name !== body.name) {
-        let baseSlug = slugify(body.name);
+        const baseSlug = slugify(body.name);
         let slug = baseSlug;
         let count = 0;
         while (await Product.exists({ slug, _id: { $ne: params.id } })) {
