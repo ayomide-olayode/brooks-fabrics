@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/nextauth";
+import { customerAuthOptions } from "@/lib/auth/customerAuth";
 import connectDB from "@/lib/db/mongoose";
 import Customer from "@/lib/db/models/Customer";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(customerAuthOptions);
     if (!session || !session.user || session.user.role !== "customer") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(customerAuthOptions);
     if (!session || !session.user || session.user.role !== "customer") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
