@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db/mongoose";
 import Order from "@/lib/db/models/Order";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { sendPushToCustomer } from "@/lib/web-push";
 
 export async function GET(request: any, props: any) {
   const params = await props.params;
@@ -59,6 +60,23 @@ export async function PATCH(request: any, props: any) {
       resourceId: order._id.toString(),
       details: { newStatus: orderStatus },
     });
+
+    // Send push notification to the customer if status changed
+    if (orderStatus && order.customerId) {
+      const statusMessages: Record<string, string> = {
+        processing: "Your order is now being processed.",
+        delivered: "Your order has been delivered!",
+        cancelled: "Your order has been cancelled.",
+      };
+
+      if (statusMessages[orderStatus]) {
+        sendPushToCustomer(order.customerId.toString(), {
+          title: `Order Update #${order.paystackReference?.substring(0, 8).toUpperCase()}`,
+          body: statusMessages[orderStatus],
+          url: "/account/orders",
+        }).catch(err => console.error("Failed to push status update", err));
+      }
+    }
 
     return NextResponse.json({ order });
   } catch {

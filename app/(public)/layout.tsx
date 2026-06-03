@@ -1,6 +1,7 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import DeliveryNotice from "@/components/ui/DeliveryNotice";
+import PushNotificationManager from "@/components/PushNotificationManager";
 import { CartProvider } from "@/context/CartContext";
 import { CustomerAuthProvider } from "@/context/CustomerAuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
@@ -20,6 +21,7 @@ export default async function PublicLayout({ children }: { children: React.React
             <main className="flex-1">{children}</main>
             <Footer />
             <DeliveryNotice />
+            <PushNotificationManager />
           </div>
           <CartDrawer />
         </CartProvider>

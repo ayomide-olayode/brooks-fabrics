@@ -4,6 +4,8 @@ import Order from "@/lib/db/models/Order";
 import { verifyPayment } from "@/lib/paystack";
 import { createOrderSafely } from "@/lib/orders/createOrderSafely";
 import type { OrderData, OrderItemInput } from "@/lib/orders/createOrderSafely";
+import { sendOrderConfirmationEmail } from "@/lib/emails";
+import { sendPushToCustomer } from "@/lib/web-push";
 
 interface PaystackItemRecord {
   [key: string]: unknown;
@@ -46,7 +48,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     const meta = txn.metadata;
-    const items = Array.isArray(meta?.items) ? meta.items : [];
+    const items = Array.isArray(meta?.items) ? (meta?.items as any[]) : [];
 
     const orderData: OrderData = {
       customerId: typeof meta?.customer_id === "string" ? meta.customer_id : undefined,
@@ -100,6 +102,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         { error: "Order creation failed" },
         { status: 400 },
       );
+    }
+
+    // Trigger confirmation email asynchronously (fire-and-forget)
+    sendOrderConfirmationEmail(reference, orderData).catch(err => 
+      console.error("[EMAIL ERROR] Failed to send order receipt:", err)
+    );
+
+    // Trigger push notification if they are a logged-in customer
+    if (orderData.customerId) {
+      sendPushToCustomer(orderData.customerId, {
+        title: "Order Received! 🎉",
+        body: `We have successfully received your order #${reference.substring(0, 8).toUpperCase()}`,
+        url: "/account/orders",
+      }).catch(err => console.error("[PUSH ERROR] Failed to send order push:", err));
     }
 
     return NextResponse.json({

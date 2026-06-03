@@ -99,12 +99,7 @@ export async function POST(request: Request) {
       }
 
       // Fire and forget order confirmation email
-      sendOrderConfirmationEmail(
-        orderData.email,
-        orderData.customerName,
-        reference,
-        orderData.total
-      ).catch((err) => {
+      sendOrderConfirmationEmail(reference, orderData).catch((err) => {
         logger.error("Failed to send order confirmation email", { error: err });
       });
     }

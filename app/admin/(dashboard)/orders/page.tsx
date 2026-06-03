@@ -3,6 +3,7 @@ import Order from "@/lib/db/models/Order";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import OrderStatusFilter from "./OrderStatusFilter";
+import OrderSearchInput from "./OrderSearchInput";
 
 export const metadata = { title: "Orders" };
 
@@ -14,6 +15,7 @@ interface OrderItemSummary {
 
 interface OrderListItem {
   _id: string;
+  paystackReference?: string;
   customerName: string;
   email: string;
   items: OrderItemSummary[];
@@ -22,10 +24,19 @@ interface OrderListItem {
   createdAt: string;
 }
 
-async function getOrders(status: string): Promise<OrderListItem[]> {
+async function getOrders(status: string, search: string): Promise<OrderListItem[]> {
   await connectDB();
-  const query: { orderStatus?: string } = {};
+  const query: any = {};
   if (status) query.orderStatus = status;
+  
+  if (search) {
+    const searchRegex = new RegExp(search, "i");
+    query.$or = [
+      { customerName: searchRegex },
+      { paystackReference: searchRegex },
+    ];
+  }
+
   const orders = await Order.find(query).sort({ createdAt: -1 }).lean();
   const parsed: OrderListItem[] = JSON.parse(JSON.stringify(orders));
   return parsed;
@@ -39,7 +50,7 @@ const STATUS_COLORS = {
 } as const;
 
 interface AdminOrdersPageProps {
-  searchParams?: Promise<{ status?: string }>;
+  searchParams?: Promise<{ status?: string; search?: string }>;
 }
 
 export default async function AdminOrdersPage({
@@ -47,7 +58,8 @@ export default async function AdminOrdersPage({
 }: AdminOrdersPageProps) {
   const resolvedParams = await searchParams;
   const status = resolvedParams?.status || "";
-  const orders = await getOrders(status);
+  const search = resolvedParams?.search || "";
+  const orders = await getOrders(status, search);
 
   return (
     <div className="space-y-6">
@@ -56,7 +68,10 @@ export default async function AdminOrdersPage({
           <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
           <p className="text-sm text-gray-500 mt-0.5">{orders.length} orders</p>
         </div>
-        <OrderStatusFilter selected={status} />
+        <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
+          <OrderSearchInput />
+          <OrderStatusFilter selected={status} />
+        </div>
       </div>
 
       {orders.length === 0 ? (
@@ -74,6 +89,7 @@ export default async function AdminOrdersPage({
             <table className="w-full text-sm whitespace-nowrap">
               <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
                 <tr>
+                  <th className="px-5 py-3 text-left">Order #</th>
                   <th className="px-5 py-3 text-left">Customer</th>
                   <th className="px-5 py-3 text-left">Items</th>
                   <th className="px-5 py-3 text-left">Total</th>
@@ -85,6 +101,9 @@ export default async function AdminOrdersPage({
               <tbody className="divide-y divide-gray-50">
                 {orders.map((order) => (
                   <tr key={order._id} className="hover:bg-gray-50">
+                    <td className="px-5 py-3 font-mono text-sm text-gray-600">
+                      {order.paystackReference ? `#${order.paystackReference.substring(0, 8).toUpperCase()}` : "-"}
+                    </td>
                     <td className="px-5 py-3">
                       <p className="font-medium text-gray-900">
                         {order.customerName}
