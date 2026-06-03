@@ -70,11 +70,15 @@ export async function PATCH(request: any, props: any) {
       };
 
       if (statusMessages[orderStatus]) {
-        sendPushToCustomer(order.customerId.toString(), {
-          title: `Order Update #${order.paystackReference?.substring(0, 8).toUpperCase()}`,
-          body: statusMessages[orderStatus],
-          url: "/account/orders",
-        }).catch(err => console.error("Failed to push status update", err));
+        try {
+          await sendPushToCustomer(order.customerId.toString(), {
+            title: `Order Update #${order.paystackReference?.substring(0, 8).toUpperCase()}`,
+            body: statusMessages[orderStatus],
+            url: "/account/orders",
+          });
+        } catch (err) {
+          console.error("Failed to push status update", err);
+        }
       }
     }
 
