@@ -29,6 +29,7 @@ export default function CheckoutPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid },
   } = useForm({ mode: "onChange" });
 
@@ -183,16 +184,14 @@ export default function CheckoutPage() {
                       onChange={(e) => {
                         const addr = savedAddresses.find((a) => a._id === e.target.value);
                         if (addr) {
-                          register("fullName").onChange({ target: { value: addr.fullName, name: "fullName" }});
-                          register("phone").onChange({ target: { value: addr.phone, name: "phone" }});
-                          register("address").onChange({ target: { value: addr.address, name: "address" }});
-                          register("email").onChange({ target: { value: customer?.email || "", name: "email" }});
+                          setValue("fullName", addr.fullName, { shouldValidate: true });
+                          setValue("phone", addr.phone, { shouldValidate: true });
+                          setValue("address", addr.address, { shouldValidate: true });
+                          setValue("email", customer?.email || "", { shouldValidate: true });
                           
                           if (addr.deliveryLocationId) {
                             setSelectedLocationId(addr.deliveryLocationId);
                           }
-                          // trigger validation update
-                          handleSubmit(() => {})();
                         }
                       }}
                       defaultValue=""
