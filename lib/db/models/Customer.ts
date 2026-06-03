@@ -15,6 +15,14 @@ interface CustomerCartItem {
   quantity: number;
 }
 
+interface PushSubscriptionData {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
 interface CustomerDocument extends Document {
   name: string;
   email: string;
@@ -24,6 +32,7 @@ interface CustomerDocument extends Document {
   defaultAddressId?: mongoose.Types.ObjectId;
   wishlist: mongoose.Types.ObjectId[];
   cart: CustomerCartItem[];
+  pushSubscriptions: PushSubscriptionData[];
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -41,6 +50,17 @@ const CartItemSchema = new Schema(
   {
     productId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
     quantity: { type: Number, required: true, min: 1 },
+  },
+  { _id: false }
+);
+
+const PushSubscriptionSchema = new Schema(
+  {
+    endpoint: { type: String, required: true },
+    keys: {
+      p256dh: { type: String, required: true },
+      auth: { type: String, required: true },
+    },
   },
   { _id: false }
 );
@@ -82,6 +102,10 @@ const CustomerSchema = new Schema(
       type: [CartItemSchema],
       default: [],
     },
+    pushSubscriptions: {
+      type: [PushSubscriptionSchema],
+      default: [],
+    },
   },
   { timestamps: true }
 );
@@ -102,7 +126,7 @@ CustomerSchema.methods.comparePassword = async function (
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-CustomerSchema.index({ email: 1 });
+
 
 const Customer =
   (mongoose.models.Customer as mongoose.Model<CustomerDocument>) ||

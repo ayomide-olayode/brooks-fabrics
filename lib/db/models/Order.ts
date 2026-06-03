@@ -40,13 +40,11 @@ const OrderSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
   },
   { timestamps: true },
 );
 
-OrderSchema.index({ paystackReference: 1 });
 OrderSchema.index({ email: 1 });
 OrderSchema.index({ customerId: 1 });
 OrderSchema.index({ orderStatus: 1 });

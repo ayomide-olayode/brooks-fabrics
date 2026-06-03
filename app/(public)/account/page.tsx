@@ -6,6 +6,7 @@ import Order from "@/lib/db/models/Order";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { ArrowRight, Package, MapPin } from "lucide-react";
+import PushToggle from "./PushToggle";
 
 export default async function AccountOverviewPage() {
   const session = await getServerSession(customerAuthOptions);
@@ -62,6 +63,9 @@ export default async function AccountOverviewPage() {
           </div>
         </Link>
       </div>
+
+      {/* Notifications */}
+      <PushToggle />
 
       {/* Recent Orders */}
       <div className="card p-6 sm:p-8">

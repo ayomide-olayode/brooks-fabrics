@@ -3,6 +3,8 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
   register: true,
   skipWaiting: true,
+  customWorkerSrc: "worker/index.ts",
+  disable: process.env.NODE_ENV === "development",
 });
 const nextConfig = {
   images: {

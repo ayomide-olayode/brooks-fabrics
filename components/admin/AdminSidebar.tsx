@@ -11,6 +11,7 @@ import {
   Store,
   Briefcase,
   Truck,
+  BellDot,
 } from "lucide-react";
 
 const NAV = [
@@ -19,6 +20,7 @@ const NAV = [
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/admin/delivery", label: "Delivery", icon: Truck },
   { href: "/admin/services", label: "Services", icon: Briefcase },
+  { href: "/admin/push", label: "Broadcast", icon: BellDot },
 ];
 
 export default function AdminSidebar() {
