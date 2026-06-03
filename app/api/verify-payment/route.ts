@@ -49,7 +49,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const items = Array.isArray(meta?.items) ? meta.items : [];
 
     const orderData: OrderData = {
-      customerName: meta?.customer_name || "Customer",
+      customerId: typeof meta?.customer_id === "string" ? meta.customer_id : undefined,
+      customerName: typeof meta?.customer_name === "string" ? meta.customer_name : "Customer",
       email: txn.customer?.email || "",
       phone: meta?.phone,
       address: meta?.address,

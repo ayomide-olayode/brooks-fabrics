@@ -68,7 +68,10 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             i.productId === item.productId
               ? {
                   ...i,
-                  quantity: Math.min(i.quantity + item.quantity, item.stock),
+                  quantity: Math.min(
+                    i.quantity + item.quantity,
+                    Math.floor(item.stock / 6)
+                  ),
                 }
               : i,
           ),
@@ -144,10 +147,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
             for (const sItem of serverItems) {
               const existing = merged.find(i => i.productId === sItem.productId);
               if (existing) {
-                // If it exists locally, combine quantities (capped at stock)
-                const newQ = Math.min(existing.quantity + sItem.quantity, existing.stock);
+                // If it exists both locally and on server, take the max quantity to prevent exponential growth on page reloads
+                const newQ = Math.max(existing.quantity, sItem.quantity);
                 if (existing.quantity !== newQ) {
-                  existing.quantity = newQ;
+                  existing.quantity = Math.min(newQ, Math.floor(existing.stock / 6));
                   changed = true;
                 }
               } else {
