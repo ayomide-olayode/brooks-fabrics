@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "E-commerce Storefront": {
+      "source": "neillock/antigravity-boilerplate",
+      "sourceType": "github",
+      "computedHash": "fcb359f1dfc894e24b1e445fa2f6d6dca37816a4741b7a73c4124d3d59ad122e"
+    },
+    "e-commerce-retail": {
+      "source": "dylantarre/animation-principles",
+      "sourceType": "github",
+      "computedHash": "30f664bb02feaf1c87d0d98485f4093c231a1530a5098cd5c05062a3d273c201"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "516bd2154eb843a8240e43d5b285229129853114ad7075a5e141e1c08e408c84"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "computedHash": "6337038fe1fe6bbe1b9f252ab678ee575859190bab6f0f246f4061824eb40875"
+    }
+  }
+}

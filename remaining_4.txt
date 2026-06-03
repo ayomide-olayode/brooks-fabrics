@@ -1,0 +1,1 @@
+﻿app/(public)/services/page.tsx(29,12): error TS2741: Property 'cta' is missing in type '{ icon: string; title: string; description: string; }' but required in type '{ icon?: string; title: any; description: any; cta: any; }'.

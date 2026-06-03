@@ -1,0 +1,21 @@
+{
+  "name": "Brooks Fabrics",
+  "short_name": "Brooks Fabrics",
+  "description": "Premium Ankara and African print fabrics online store.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDFBF7",
+  "theme_color": "#D4A017",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
