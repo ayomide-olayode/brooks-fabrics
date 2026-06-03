@@ -12,6 +12,7 @@ import {
   Briefcase,
   Truck,
   BellDot,
+  Users,
   X,
 } from "lucide-react";
 
@@ -19,6 +20,7 @@ const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
+  { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/delivery", label: "Delivery", icon: Truck },
   { href: "/admin/services", label: "Services", icon: Briefcase },
   { href: "/admin/push", label: "Broadcast", icon: BellDot },

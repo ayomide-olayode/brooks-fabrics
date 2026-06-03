@@ -1,8 +1,9 @@
 import connectDB from "@/lib/db/mongoose";
 import Product from "@/lib/db/models/Product";
 import Order from "@/lib/db/models/Order";
+import Customer from "@/lib/db/models/Customer";
 import Link from "next/link";
-import { Package, ShoppingBag, AlertTriangle, TrendingUp } from "lucide-react";
+import { Package, ShoppingBag, AlertTriangle, TrendingUp, Users } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export const metadata = { title: "Dashboard" };
@@ -28,6 +29,7 @@ interface RecentOrder {
 interface DashboardStats {
   totalProducts: number;
   totalOrders: number;
+  totalCustomers: number;
   lowStock: number;
   recentOrders: RecentOrder[];
   totalRevenue: number;
@@ -35,10 +37,11 @@ interface DashboardStats {
 
 async function getStats(): Promise<DashboardStats> {
   await connectDB();
-  const [totalProducts, totalOrders, lowStock, recentOrders, revenue] =
+  const [totalProducts, totalOrders, totalCustomers, lowStock, recentOrders, revenue] =
     await Promise.all([
       Product.countDocuments(),
       Order.countDocuments(),
+      Customer.countDocuments(),
       Product.countDocuments({ stock: { $gt: 0, $lt: 10 } }),
       Order.find().sort({ createdAt: -1 }).limit(5).lean(),
       Order.aggregate([
@@ -52,6 +55,7 @@ async function getStats(): Promise<DashboardStats> {
   return {
     totalProducts,
     totalOrders,
+    totalCustomers,
     lowStock,
     recentOrders: parsedRecent,
     totalRevenue: revenue[0]?.total || 0,
@@ -59,7 +63,7 @@ async function getStats(): Promise<DashboardStats> {
 }
 
 export default async function DashboardPage() {
-  const { totalProducts, totalOrders, lowStock, recentOrders, totalRevenue } =
+  const { totalProducts, totalOrders, totalCustomers, lowStock, recentOrders, totalRevenue } =
     await getStats();
 
   const stats: Array<{
@@ -87,12 +91,12 @@ export default async function DashboardPage() {
       href: "/admin/orders",
     },
     {
-      label: "Low Stock Alerts",
-      value: lowStock,
-      icon: AlertTriangle,
-      color: "text-gold-600",
-      bg: "bg-gold-50",
-      href: "/admin/products",
+      label: "Total Customers",
+      value: totalCustomers,
+      icon: Users,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+      href: "/admin/customers",
     },
     {
       label: "Total Revenue",

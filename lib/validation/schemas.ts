@@ -36,14 +36,14 @@ export const ServiceUpdateSchema = z
 
 export const DeliveryLocationCreateSchema = z.object({
   name: z.string().min(1).max(200),
-  fee: z.number().nonnegative().max(100_000),
+  fee: z.coerce.number().nonnegative().max(100_000),
   isActive: z.boolean().optional(),
 });
 
 export const DeliveryLocationUpdateSchema = z
   .object({
     name: z.string().min(1).max(200).optional(),
-    fee: z.number().nonnegative().max(100_000).optional(),
+    fee: z.coerce.number().nonnegative().max(100_000).optional(),
     isActive: z.boolean().optional(),
   })
   .strict()
@@ -76,7 +76,7 @@ export type StockCheckBody = z.infer<typeof StockCheckSchema>;
 
 export const ProductCreateSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
-  description: z.string().min(50, "Description must be at least 50 characters").max(5000),
+  description: z.string().max(5000).optional(),
   pricePerYard: z.coerce.number().min(0, "Price must be at least 0"),
   stock: z.coerce.number().int().min(0, "Stock must be at least 0"),
   images: z.array(z.string().url()).optional(),
