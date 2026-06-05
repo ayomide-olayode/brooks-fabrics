@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { customerAuthOptions } from "@/lib/auth/customerAuth";
 import connectDB from "@/lib/db/mongoose";
 import Customer from "@/lib/db/models/Customer";
+import Product from "@/lib/db/models/Product";
 import ProductCard from "@/components/product/ProductCard";
 import { redirect } from "next/navigation";
 import Link from "next/link";
