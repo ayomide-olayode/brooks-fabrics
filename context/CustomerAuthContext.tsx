@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionProvider, useSession, signIn, signOut } from "next-auth/react";
+import type { Session } from "next-auth";
 import {
   createContext,
   useContext,
@@ -47,16 +48,26 @@ function CustomerAuthInner({ children }: { children: ReactNode }) {
     email: string,
     password: string
   ): Promise<{ ok: boolean; error?: string }> {
-    const result = await signIn("customer-credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("customer-credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
-      return { ok: false, error: result.error };
+      if (result?.error) {
+        return { ok: false, error: result.error };
+      }
+      return { ok: true };
+    } catch (err: unknown) {
+      return {
+        ok: false,
+        error:
+          err instanceof Error
+            ? err.message
+            : "An unexpected error occurred during login.",
+      };
     }
-    return { ok: true };
   }
 
   async function loginWithGoogle(): Promise<void> {
@@ -75,8 +86,12 @@ function CustomerAuthInner({ children }: { children: ReactNode }) {
     </CustomerAuthContext.Provider>
   );
 }
+interface CustomerAuthProviderProps {
+  children: ReactNode;
+  session?: Session | null;
+}
 
-export function CustomerAuthProvider({ children, session }: { children: ReactNode; session?: any }) {
+export function CustomerAuthProvider({ children, session }: CustomerAuthProviderProps) {
   return (
     <SessionProvider basePath={CUSTOMER_AUTH_URL} session={session}>
       <CustomerAuthInner>{children}</CustomerAuthInner>
