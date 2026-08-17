@@ -118,9 +118,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     // Invalidate cache
-    await redis.del(CACHE_KEY).catch((err) => {
-      logger.warn("Failed to invalidate product cache", { error: err });
-    });
+    if (redis) {
+      await redis.del(CACHE_KEY).catch((err: unknown) => {
+        logger.warn("Failed to invalidate product cache", { error: err });
+      });
+    }
 
     return NextResponse.json({ product }, { status: 201 });
   } catch (err) {
