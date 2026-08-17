@@ -23,16 +23,18 @@ export async function POST(req: Request) {
     }
 
     // Rate Limiting: 10 broadcasts per hour
-    const rateLimitKey = `rate-limit:broadcast`;
-    const count = await redis.incr(rateLimitKey);
-    if (count === 1) {
-      await redis.expire(rateLimitKey, 3600);
-    }
-    if (count > 10) {
-      return NextResponse.json(
-        { error: "Broadcast rate limit exceeded. Maximum 10 per hour allowed." },
-        { status: 429 }
-      );
+    if (redis) {
+      const rateLimitKey = `rate-limit:broadcast`;
+      const count = await redis.incr(rateLimitKey);
+      if (count === 1) {
+        await redis.expire(rateLimitKey, 3600);
+      }
+      if (count > 10) {
+        return NextResponse.json(
+          { error: "Broadcast rate limit exceeded. Maximum 10 per hour allowed." },
+          { status: 429 }
+        );
+      }
     }
 
     const body = await req.json();

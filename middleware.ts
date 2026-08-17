@@ -1,28 +1,49 @@
-import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-// ── Rate limiters ────────────────────────────────────────────────────────────
+// ── Rate limiters (lazily initialized & fail-safe) ───────────────────────────
 
-const loginRateLimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(5, "15 m"),
-  analytics: true,
-  prefix: "brooks:auth:login",
-});
+let loginRateLimit: Ratelimit | null = null;
+let registerRateLimit: Ratelimit | null = null;
 
-const registerRateLimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, "1 h"),
-  analytics: true,
-  prefix: "brooks:auth:register",
-});
+function getRateLimiters(): {
+  loginLimiter: Ratelimit | null;
+  registerLimiter: Ratelimit | null;
+} {
+  if (
+    !loginRateLimit &&
+    process.env.UPSTASH_REDIS_REST_URL &&
+    process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
+    try {
+      const redis = Redis.fromEnv();
+      loginRateLimit = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(5, "15 m"),
+        analytics: true,
+        prefix: "brooks:auth:login",
+      });
+      registerRateLimit = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(10, "1 h"),
+        analytics: true,
+        prefix: "brooks:auth:register",
+      });
+    } catch {
+      loginRateLimit = null;
+      registerRateLimit = null;
+    }
+  }
 
-// ── Auth rate limiting (runs before withAuth) ─────────────────────────────────
+  return { loginLimiter: loginRateLimit, registerLimiter: registerRateLimit };
+}
 
-async function rateLimitMiddleware(req: NextRequest) {
+// ── Auth rate limiting ────────────────────────────────────────────────────────
+
+async function rateLimitMiddleware(req: NextRequest): Promise<NextResponse | null> {
   const pathname = req.nextUrl.pathname;
   const isAdminLogin = pathname === "/api/auth/callback/credentials" && req.method === "POST";
   const isCustomerLogin = pathname === "/api/auth/customer/callback/customer-credentials" && req.method === "POST";
@@ -30,67 +51,82 @@ async function rateLimitMiddleware(req: NextRequest) {
 
   if (!isAdminLogin && !isCustomerLogin && !isCustomerRegister) return null;
 
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "anonymous";
+  try {
+    const { loginLimiter, registerLimiter } = getRateLimiters();
+    const limiter = isCustomerRegister ? registerLimiter : loginLimiter;
+    if (!limiter) return null;
 
-  const limiter = isCustomerRegister ? registerRateLimit : loginRateLimit;
-  const { success, limit, remaining, reset } = await limiter.limit(ip);
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "anonymous";
 
-  if (!success) {
-    const retryAfterSeconds = Math.ceil((reset - Date.now()) / 1000);
-    return new NextResponse(
-      JSON.stringify({
-        error: "Too many login attempts. Please try again later.",
-        retryAfter: retryAfterSeconds,
-      }),
-      {
-        status: 429,
-        headers: {
-          "Content-Type": "application/json",
-          "X-RateLimit-Limit": limit.toString(),
-          "X-RateLimit-Remaining": remaining.toString(),
-          "X-RateLimit-Reset": reset.toString(),
-          "Retry-After": retryAfterSeconds.toString(),
-        },
-      }
-    );
+    const { success, limit, remaining, reset } = await limiter.limit(ip);
+
+    if (!success) {
+      const retryAfterSeconds = Math.ceil((reset - Date.now()) / 1000);
+      return new NextResponse(
+        JSON.stringify({
+          error: "Too many login attempts. Please try again later.",
+          retryAfter: retryAfterSeconds,
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+            "Retry-After": retryAfterSeconds.toString(),
+          },
+        }
+      );
+    }
+  } catch (err: unknown) {
+    // Fail-open if rate limiter has network/redis issues
+    console.error("Rate limit check failed:", err);
   }
 
-  return null; // under the limit, continue
+  return null;
 }
 
 // ── Combined middleware ───────────────────────────────────────────────────────
 
-const authMiddleware = withAuth(
-  function middleware(req) {
-    if (req.nextUrl.pathname === "/admin") {
-      return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-    }
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        if (req.nextUrl.pathname === "/admin/login") return true;
-        return !!token;
-      },
-    },
-    pages: {
-      signIn: "/admin/login",
-    },
-  }
-);
-
-export default async function middleware(req: NextRequest) {
+export default async function middleware(req: NextRequest): Promise<NextResponse> {
   // Check rate limit first
   const rateLimitResponse = await rateLimitMiddleware(req);
   if (rateLimitResponse) return rateLimitResponse;
 
-  // Then run admin auth protection
+  // Protect Admin routes
   if (req.nextUrl.pathname.startsWith("/admin")) {
-    return (authMiddleware as any)(req);
+    const isLoginPage = req.nextUrl.pathname === "/admin/login";
+
+    let token = null;
+    try {
+      token = await getToken({
+        req,
+        secret: process.env.NEXTAUTH_SECRET,
+      });
+    } catch {
+      token = null;
+    }
+
+    if (isLoginPage) {
+      if (token) {
+        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+      }
+      return NextResponse.next();
+    }
+
+    if (!token) {
+      const signInUrl = new URL("/admin/login", req.url);
+      signInUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    if (req.nextUrl.pathname === "/admin") {
+      return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+    }
   }
 
   return NextResponse.next();

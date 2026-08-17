@@ -20,13 +20,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const cacheField = `${category || "all"}:${featured || "false"}`;
 
     // Try cache first
-    try {
-      const cachedProducts = await redis.hget(CACHE_KEY, cacheField);
-      if (cachedProducts) {
-        return NextResponse.json({ products: cachedProducts });
+    if (redis) {
+      try {
+        const cachedProducts = await redis.hget(CACHE_KEY, cacheField);
+        if (cachedProducts) {
+          return NextResponse.json({ products: cachedProducts });
+        }
+      } catch (cacheErr: unknown) {
+        logger.warn("Redis cache read failed", { error: cacheErr });
       }
-    } catch (cacheErr) {
-      logger.warn("Redis cache read failed", { error: cacheErr });
     }
 
     await connectDB();
@@ -41,9 +43,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .lean();
 
     // Set cache asynchronously (fire and forget)
-    redis.hset(CACHE_KEY, { [cacheField]: products }).catch((err) => {
-      logger.warn("Redis cache write failed", { error: err });
-    });
+    if (redis) {
+      redis.hset(CACHE_KEY, { [cacheField]: products }).catch((err: unknown) => {
+        logger.warn("Redis cache write failed", { error: err });
+      });
+    }
 
     return NextResponse.json({ products });
   } catch (err) {

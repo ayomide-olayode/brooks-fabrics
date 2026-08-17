@@ -82,9 +82,11 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     });
 
     // Invalidate cache
-    await redis.del(CACHE_KEY).catch((err) => {
-      logger.warn("Failed to invalidate product cache", { error: err });
-    });
+    if (redis) {
+      await redis.del(CACHE_KEY).catch((err: unknown) => {
+        logger.warn("Failed to invalidate product cache", { error: err });
+      });
+    }
 
     return NextResponse.json({ product });
   } catch (err) {
@@ -119,9 +121,11 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
     });
 
     // Invalidate cache
-    await redis.del(CACHE_KEY).catch((err) => {
-      logger.warn("Failed to invalidate product cache", { error: err });
-    });
+    if (redis) {
+      await redis.del(CACHE_KEY).catch((err: unknown) => {
+        logger.warn("Failed to invalidate product cache", { error: err });
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
